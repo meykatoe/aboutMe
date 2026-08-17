@@ -21,6 +21,15 @@
                 </div>
             @endif
 
+            <h1 class="mt-4 text-2xl font-semibold">{{ $user->name }}</h1>
+            <p class="text-gray-500">{{ '@'.$user->username }}</p>
+
+            @if ($user->bio)
+                <p class="mt-4 text-gray-700 text-center max-w-md whitespace-pre-line">{{ $user->bio }}</p>
+            @else
+                <p class="mt-4 text-gray-400 text-sm">這位使用者還沒有設定個人介紹。</p>
+            @endif
+
             @if ($user->socialLinks->isNotEmpty())
                 <div class="grid grid-cols-4 gap-3 mt-4">
                     @foreach ($user->socialLinks as $social)
@@ -30,15 +39,6 @@
                         </a>
                     @endforeach
                 </div>
-            @endif
-
-            <h1 class="mt-4 text-2xl font-semibold">{{ $user->name }}</h1>
-            <p class="text-gray-500">{{ '@'.$user->username }}</p>
-
-            @if ($user->bio)
-                <p class="mt-4 text-gray-700 text-center max-w-md whitespace-pre-line">{{ $user->bio }}</p>
-            @else
-                <p class="mt-4 text-gray-400 text-sm">這位使用者還沒有設定個人介紹。</p>
             @endif
 
             @if ($user->links->isNotEmpty())
