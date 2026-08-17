@@ -36,6 +36,11 @@ new class extends Component
                     <x-nav-link :href="route('links.index')" :active="request()->routeIs('links.index')" wire:navigate>
                         {{ __('導覽連結') }}
                     </x-nav-link>
+                    @if (auth()->user()->is_admin)
+                        <x-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.dashboard')" wire:navigate>
+                            {{ __('管理員後台') }}
+                        </x-nav-link>
+                    @endif
                 </div>
             </div>
 
@@ -90,6 +95,11 @@ new class extends Component
             <x-responsive-nav-link :href="route('links.index')" :active="request()->routeIs('links.index')" wire:navigate>
                 {{ __('導覽連結') }}
             </x-responsive-nav-link>
+            @if (auth()->user()->is_admin)
+                <x-responsive-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.dashboard')" wire:navigate>
+                    {{ __('管理員後台') }}
+                </x-responsive-nav-link>
+            @endif
         </div>
 
         <!-- Responsive Settings Options -->
