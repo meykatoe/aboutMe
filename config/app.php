@@ -56,6 +56,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Initial Administrator Email
+    |--------------------------------------------------------------------------
+    |
+    | Used by the AdminUserSeeder to set the email address of the admin
+    | account that is automatically created on first deploy. Falls back to
+    | admin@<APP_URL host> when not set.
+    |
+    */
+
+    'admin_email' => env('ADMIN_EMAIL'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
     |
