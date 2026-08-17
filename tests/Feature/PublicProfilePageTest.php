@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Link;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
@@ -56,6 +57,18 @@ class PublicProfilePageTest extends TestCase
         ]);
 
         $this->get('/hasavatar')->assertSee($user->avatar_url, false);
+    }
+
+    public function test_public_profile_page_lists_users_links_in_order(): void
+    {
+        $user = User::factory()->create(['username' => 'linky']);
+
+        Link::factory()->for($user)->create(['title' => 'Second Link', 'position' => 2]);
+        Link::factory()->for($user)->create(['title' => 'First Link', 'position' => 1]);
+
+        $response = $this->get('/linky');
+
+        $response->assertSeeInOrder(['First Link', 'Second Link']);
     }
 
     public function test_unknown_username_returns_404(): void

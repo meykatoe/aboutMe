@@ -29,6 +29,20 @@
             @else
                 <p class="mt-4 text-gray-400 text-sm">這位使用者還沒有設定個人介紹。</p>
             @endif
+
+            @if ($user->links->isNotEmpty())
+                <div class="w-full max-w-md mt-8 mb-16 space-y-3">
+                    @foreach ($user->links as $link)
+                        <a href="{{ $link->url }}" target="_blank" rel="noopener"
+                           class="block bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md hover:border-indigo-300 transition">
+                            <p class="font-medium text-gray-900">{{ $link->title }}</p>
+                            @if ($link->description)
+                                <p class="text-sm text-gray-500">{{ $link->description }}</p>
+                            @endif
+                        </a>
+                    @endforeach
+                </div>
+            @endif
         </div>
     </body>
 </html>

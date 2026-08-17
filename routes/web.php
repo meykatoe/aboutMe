@@ -13,6 +13,10 @@ Route::view('profile', 'profile')
     ->middleware(['auth'])
     ->name('profile');
 
+Route::view('links', 'links')
+    ->middleware(['auth'])
+    ->name('links.index');
+
 require __DIR__.'/auth.php';
 
 // 公開個人頁面，須放在所有靜態路由之後，避免蓋掉 /login、/dashboard 等既有路徑
