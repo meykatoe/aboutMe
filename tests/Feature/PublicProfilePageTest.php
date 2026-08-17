@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class PublicProfilePageTest extends TestCase
@@ -43,6 +44,18 @@ class PublicProfilePageTest extends TestCase
         ]);
 
         $this->get('/nobio')->assertSee('這位使用者還沒有設定個人介紹。');
+    }
+
+    public function test_public_profile_page_shows_avatar_image_when_set(): void
+    {
+        Storage::fake('public');
+
+        $user = User::factory()->create([
+            'username' => 'hasavatar',
+            'avatar_path' => 'avatars/example.jpg',
+        ]);
+
+        $this->get('/hasavatar')->assertSee($user->avatar_url, false);
     }
 
     public function test_unknown_username_returns_404(): void

@@ -4,6 +4,8 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Volt\Volt;
 use Tests\TestCase;
 
@@ -46,6 +48,40 @@ class ProfileTest extends TestCase
         $this->assertSame('test@example.com', $user->email);
         $this->assertSame('Hello, this is my bio.', $user->bio);
         $this->assertNull($user->email_verified_at);
+    }
+
+    public function test_avatar_can_be_uploaded_and_replaces_the_previous_one(): void
+    {
+        Storage::fake('public');
+
+        $user = User::factory()->create();
+
+        $this->actingAs($user);
+
+        Volt::test('profile.update-profile-information-form')
+            ->set('name', $user->name)
+            ->set('email', $user->email)
+            ->set('avatar', UploadedFile::fake()->image('avatar1.jpg'))
+            ->call('updateProfileInformation')
+            ->assertHasNoErrors();
+
+        $user->refresh();
+        $firstPath = $user->avatar_path;
+
+        Storage::disk('public')->assertExists($firstPath);
+
+        Volt::test('profile.update-profile-information-form')
+            ->set('name', $user->name)
+            ->set('email', $user->email)
+            ->set('avatar', UploadedFile::fake()->image('avatar2.jpg'))
+            ->call('updateProfileInformation')
+            ->assertHasNoErrors();
+
+        $user->refresh();
+
+        Storage::disk('public')->assertMissing($firstPath);
+        Storage::disk('public')->assertExists($user->avatar_path);
+        $this->assertNotSame($firstPath, $user->avatar_path);
     }
 
     public function test_email_verification_status_is_unchanged_when_the_email_address_is_unchanged(): void

@@ -13,9 +13,13 @@
     </head>
     <body class="font-sans text-gray-900 antialiased">
         <div class="min-h-screen flex flex-col items-center pt-16 px-6 bg-gray-100">
-            <div class="flex items-center justify-center w-24 h-24 rounded-full bg-indigo-600 text-white text-3xl font-semibold">
-                {{ Str::of($user->name)->explode(' ')->map(fn ($part) => Str::substr($part, 0, 1))->take(2)->implode('') }}
-            </div>
+            @if ($user->avatar_url)
+                <img src="{{ $user->avatar_url }}" class="w-24 h-24 rounded-full object-cover">
+            @else
+                <div class="flex items-center justify-center w-24 h-24 rounded-full bg-indigo-600 text-white text-3xl font-semibold">
+                    {{ Str::of($user->name)->explode(' ')->map(fn ($part) => Str::substr($part, 0, 1))->take(2)->implode('') }}
+                </div>
+            @endif
 
             <h1 class="mt-4 text-2xl font-semibold">{{ $user->name }}</h1>
             <p class="text-gray-500">{{ '@'.$user->username }}</p>

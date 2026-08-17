@@ -3,14 +3,19 @@
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Livewire\Volt\Component;
+use Livewire\WithFileUploads;
 
 new class extends Component
 {
+    use WithFileUploads;
+
     public string $name = '';
     public string $email = '';
     public string $bio = '';
+    public $avatar = null;
 
     /**
      * Mount the component.
@@ -33,12 +38,26 @@ new class extends Component
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', Rule::unique(User::class)->ignore($user->id)],
             'bio' => ['nullable', 'string', 'max:1000'],
+            'avatar' => ['nullable', 'image', 'max:2048'],
         ]);
 
-        $user->fill($validated);
+        $user->fill([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'bio' => $validated['bio'],
+        ]);
 
         if ($user->isDirty('email')) {
             $user->email_verified_at = null;
+        }
+
+        if ($this->avatar) {
+            if ($user->avatar_path) {
+                Storage::disk('public')->delete($user->avatar_path);
+            }
+
+            $user->avatar_path = $this->avatar->store('avatars', 'public');
+            $this->avatar = null;
         }
 
         $user->save();
@@ -77,6 +96,26 @@ new class extends Component
     </header>
 
     <form wire:submit="updateProfileInformation" class="mt-6 space-y-6">
+        <div>
+            <x-input-label for="avatar" :value="__('Avatar')" />
+
+            <div class="mt-1 flex items-center gap-4">
+                @if ($avatar)
+                    <img src="{{ $avatar->temporaryUrl() }}" class="w-16 h-16 rounded-full object-cover">
+                @elseif (auth()->user()->avatar_url)
+                    <img src="{{ auth()->user()->avatar_url }}" class="w-16 h-16 rounded-full object-cover">
+                @else
+                    <div class="w-16 h-16 rounded-full bg-indigo-600 text-white flex items-center justify-center text-xl font-semibold">
+                        {{ Str::of(auth()->user()->name)->explode(' ')->map(fn ($part) => Str::substr($part, 0, 1))->take(2)->implode('') }}
+                    </div>
+                @endif
+
+                <input type="file" wire:model="avatar" id="avatar" accept="image/*">
+            </div>
+
+            <x-input-error class="mt-2" :messages="$errors->get('avatar')" />
+        </div>
+
         <div>
             <x-input-label for="name" :value="__('Name')" />
             <x-text-input wire:model="name" id="name" name="name" type="text" class="mt-1 block w-full" required autofocus autocomplete="name" />
