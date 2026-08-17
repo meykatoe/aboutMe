@@ -44,4 +44,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(Link::class)->orderBy('position');
     }
+
+    public function socialLinks(): HasMany
+    {
+        return $this->hasMany(SocialLink::class)->orderBy('position');
+    }
 }

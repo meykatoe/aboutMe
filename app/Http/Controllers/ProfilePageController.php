@@ -9,7 +9,7 @@ class ProfilePageController extends Controller
 {
     public function show(string $username): View
     {
-        $user = User::where('username', $username)->with('links')->firstOrFail();
+        $user = User::where('username', $username)->with(['links', 'socialLinks'])->firstOrFail();
 
         return view('profile-page', ['user' => $user]);
     }

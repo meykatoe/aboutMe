@@ -21,6 +21,17 @@
                 </div>
             @endif
 
+            @if ($user->socialLinks->isNotEmpty())
+                <div class="grid grid-cols-4 gap-3 mt-4">
+                    @foreach ($user->socialLinks as $social)
+                        <a href="{{ $social->url }}" target="_blank" rel="noopener" title="{{ $social->platform_label }}"
+                           class="flex items-center justify-center w-11 h-11 rounded-full bg-white border border-gray-200 text-gray-700 shadow-sm hover:shadow-md hover:border-indigo-300 hover:text-indigo-600 transition">
+                            <x-social-icon :platform="$social->platform" class="w-5 h-5" />
+                        </a>
+                    @endforeach
+                </div>
+            @endif
+
             <h1 class="mt-4 text-2xl font-semibold">{{ $user->name }}</h1>
             <p class="text-gray-500">{{ '@'.$user->username }}</p>
 

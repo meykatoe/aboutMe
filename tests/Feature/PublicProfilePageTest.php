@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Link;
+use App\Models\SocialLink;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
@@ -69,6 +70,19 @@ class PublicProfilePageTest extends TestCase
         $response = $this->get('/linky');
 
         $response->assertSeeInOrder(['First Link', 'Second Link']);
+    }
+
+    public function test_public_profile_page_shows_social_link_icons(): void
+    {
+        $user = User::factory()->create(['username' => 'social']);
+
+        SocialLink::factory()->for($user)->create(['url' => 'https://github.com/laravel']);
+
+        $response = $this->get('/social');
+
+        $response
+            ->assertOk()
+            ->assertSee('https://github.com/laravel', false);
     }
 
     public function test_unknown_username_returns_404(): void
