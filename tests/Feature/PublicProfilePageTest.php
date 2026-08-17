@@ -25,6 +25,26 @@ class PublicProfilePageTest extends TestCase
             ->assertSee('@janedoe');
     }
 
+    public function test_public_profile_page_shows_bio_when_set(): void
+    {
+        User::factory()->create([
+            'username' => 'withbio',
+            'bio' => '這是我的自我介紹。',
+        ]);
+
+        $this->get('/withbio')->assertSee('這是我的自我介紹。');
+    }
+
+    public function test_public_profile_page_shows_placeholder_when_bio_is_empty(): void
+    {
+        User::factory()->create([
+            'username' => 'nobio',
+            'bio' => null,
+        ]);
+
+        $this->get('/nobio')->assertSee('這位使用者還沒有設定個人介紹。');
+    }
+
     public function test_unknown_username_returns_404(): void
     {
         $response = $this->get('/no-such-user');
