@@ -84,6 +84,51 @@ class ProfileTest extends TestCase
         $this->assertNotSame($firstPath, $user->avatar_path);
     }
 
+    public function test_uploaded_avatar_is_re_encoded_as_jpeg_regardless_of_source_format(): void
+    {
+        Storage::fake('public');
+
+        $user = User::factory()->create();
+
+        $this->actingAs($user);
+
+        Volt::test('profile.update-profile-information-form')
+            ->set('name', $user->name)
+            ->set('email', $user->email)
+            ->set('avatar', UploadedFile::fake()->image('avatar.png'))
+            ->call('updateProfileInformation')
+            ->assertHasNoErrors();
+
+        $user->refresh();
+
+        $this->assertStringEndsWith('.jpg', $user->avatar_path);
+
+        $contents = Storage::disk('public')->get($user->avatar_path);
+        $info = getimagesizefromstring($contents);
+
+        $this->assertSame('image/jpeg', $info['mime']);
+    }
+
+    public function test_avatar_upload_rejects_undecodable_image_data(): void
+    {
+        Storage::fake('public');
+
+        $user = User::factory()->create();
+
+        $this->actingAs($user);
+
+        $fakeImage = UploadedFile::fake()->createWithContent('avatar.jpg', 'not-actually-an-image');
+
+        Volt::test('profile.update-profile-information-form')
+            ->set('name', $user->name)
+            ->set('email', $user->email)
+            ->set('avatar', $fakeImage)
+            ->call('updateProfileInformation')
+            ->assertHasErrors(['avatar']);
+
+        $this->assertNull($user->refresh()->avatar_path);
+    }
+
     public function test_email_verification_status_is_unchanged_when_the_email_address_is_unchanged(): void
     {
         $user = User::factory()->create();
