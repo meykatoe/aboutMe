@@ -2,6 +2,7 @@
 
 use App\Models\User;
 use App\Rules\ReservedUsername;
+use GrantHolle\Altcha\Rules\ValidAltcha;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -18,6 +19,7 @@ new #[Layout('layouts.guest')] class extends Component
     public string $email = '';
     public string $password = '';
     public string $password_confirmation = '';
+    public string $token = '';
 
     /**
      * Handle an incoming registration request.
@@ -33,8 +35,10 @@ new #[Layout('layouts.guest')] class extends Component
             'username' => ['required', 'string', 'min:3', 'max:20', 'alpha_dash', 'unique:'.User::class, new ReservedUsername],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
             'password' => ['required', 'string', 'confirmed', Rules\Password::defaults()],
+            'token' => ['required', new ValidAltcha],
         ]);
 
+        unset($validated['token']);
         $validated['password'] = Hash::make($validated['password']);
 
         event(new Registered($user = User::create($validated)));
@@ -113,6 +117,15 @@ new #[Layout('layouts.guest')] class extends Component
                             name="password_confirmation" required autocomplete="new-password" />
 
             <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
+        </div>
+
+        <!-- Captcha -->
+        <div class="mt-4" wire:ignore>
+            <altcha-widget
+                challengeurl="{{ route('altcha-challenge') }}"
+                x-on:statechange="$wire.token = $event.detail.state === 'verified' ? $event.detail.payload : ''"
+            ></altcha-widget>
+            <x-input-error :messages="$errors->get('token')" class="mt-2" />
         </div>
 
         <div class="flex items-center justify-end mt-4">
