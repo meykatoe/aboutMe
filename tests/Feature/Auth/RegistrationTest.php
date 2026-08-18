@@ -78,4 +78,33 @@ class RegistrationTest extends TestCase
             ['LOGIN'],
         ];
     }
+
+    public function test_registration_is_rate_limited_per_ip(): void
+    {
+        for ($i = 0; $i < 5; $i++) {
+            Volt::test('pages.auth.register')
+                ->set('name', 'Test User')
+                ->set('username', "throttle{$i}")
+                ->set('email', "throttle{$i}@example.com")
+                ->set('password', 'password')
+                ->set('password_confirmation', 'password')
+                ->call('register');
+
+            \Illuminate\Support\Facades\Auth::logout();
+        }
+
+        $this->assertSame(5, \App\Models\User::count());
+
+        $component = Volt::test('pages.auth.register')
+            ->set('name', 'Test User')
+            ->set('username', 'throttle-blocked')
+            ->set('email', 'throttle-blocked@example.com')
+            ->set('password', 'password')
+            ->set('password_confirmation', 'password');
+
+        $component->call('register');
+
+        $component->assertHasErrors(['name']);
+        $this->assertSame(5, \App\Models\User::count());
+    }
 }
