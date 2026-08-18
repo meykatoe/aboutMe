@@ -93,6 +93,16 @@ new class extends Component
         $user->forceFill(['is_admin' => ! $user->is_admin])->save();
     }
 
+    public function toggleActive(int $id): void
+    {
+        if ($id === Auth::id()) {
+            return;
+        }
+
+        $user = User::findOrFail($id);
+        $user->forceFill(['is_active' => ! $user->is_active])->save();
+    }
+
     public function deleteUser(int $id): void
     {
         if ($id === Auth::id()) {
@@ -149,6 +159,7 @@ new class extends Component
                 <tr>
                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ __('帳號') }}</th>
                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ __('角色') }}</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ __('狀態') }}</th>
                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ __('註冊時間') }}</th>
                     <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">{{ __('操作') }}</th>
                 </tr>
@@ -167,6 +178,13 @@ new class extends Component
                                 <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">{{ __('一般使用者') }}</span>
                             @endif
                         </td>
+                        <td class="px-4 py-3">
+                            @if ($user->is_active)
+                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">{{ __('正常') }}</span>
+                            @else
+                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">{{ __('已停權') }}</span>
+                            @endif
+                        </td>
                         <td class="px-4 py-3 text-sm text-gray-500">{{ $user->created_at->format('Y-m-d') }}</td>
                         <td class="px-4 py-3">
                             <div class="flex items-center justify-end gap-3">
@@ -181,6 +199,14 @@ new class extends Component
                                         {{ $user->is_admin ? __('取消管理員') : __('設為管理員') }}
                                     </button>
 
+                                    <button
+                                        wire:click="toggleActive({{ $user->id }})"
+                                        wire:confirm="{{ $user->is_active ? __('確定要停權此帳號嗎？該帳號將無法登入，但資料會保留。') : __('確定要恢復此帳號嗎？') }}"
+                                        class="text-sm {{ $user->is_active ? 'text-amber-600 hover:text-amber-800' : 'text-green-600 hover:text-green-800' }}"
+                                    >
+                                        {{ $user->is_active ? __('停權') : __('恢復') }}
+                                    </button>
+
                                     <button wire:click="deleteUser({{ $user->id }})" wire:confirm="{{ __('確定要刪除此帳號嗎？此操作無法復原。') }}" class="text-sm text-red-600 hover:text-red-800">
                                         {{ __('刪除') }}
                                     </button>
@@ -192,7 +218,7 @@ new class extends Component
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="4" class="px-4 py-6 text-center text-sm text-gray-500">{{ __('找不到符合條件的帳號。') }}</td>
+                        <td colspan="5" class="px-4 py-6 text-center text-sm text-gray-500">{{ __('找不到符合條件的帳號。') }}</td>
                     </tr>
                 @endforelse
             </tbody>

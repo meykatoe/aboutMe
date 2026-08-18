@@ -87,6 +87,35 @@ class AdminUsersManagementTest extends TestCase
         $this->assertTrue($admin->fresh()->is_admin);
     }
 
+    public function test_admin_can_suspend_and_reactivate_another_user(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+        $target = User::factory()->create(['is_active' => true]);
+
+        Volt::actingAs($admin)
+            ->test('admin.users-manage')
+            ->call('toggleActive', $target->id);
+
+        $this->assertFalse($target->fresh()->is_active);
+
+        Volt::actingAs($admin)
+            ->test('admin.users-manage')
+            ->call('toggleActive', $target->id);
+
+        $this->assertTrue($target->fresh()->is_active);
+    }
+
+    public function test_admin_cannot_suspend_themselves(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true, 'is_active' => true]);
+
+        Volt::actingAs($admin)
+            ->test('admin.users-manage')
+            ->call('toggleActive', $admin->id);
+
+        $this->assertTrue($admin->fresh()->is_active);
+    }
+
     public function test_admin_can_delete_another_users_account(): void
     {
         $admin = User::factory()->create(['is_admin' => true]);

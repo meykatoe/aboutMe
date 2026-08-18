@@ -38,6 +38,14 @@ class LoginForm extends Form
             ]);
         }
 
+        if (! Auth::user()->is_active) {
+            Auth::logout();
+
+            throw ValidationException::withMessages([
+                'form.email' => __('此帳號已被停權，請聯絡管理員。'),
+            ]);
+        }
+
         RateLimiter::clear($this->throttleKey());
     }
 
