@@ -2,6 +2,8 @@
 
 use App\Support\SocialPlatform;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Validation\ValidationException;
 use Livewire\Volt\Component;
 
 new class extends Component
@@ -11,12 +13,22 @@ new class extends Component
     protected function rules(): array
     {
         return [
-            'url' => ['required', 'url', 'max:2048'],
+            'url' => ['required', 'url:http,https', 'max:2048'],
         ];
     }
 
     public function addSocialLink(): void
     {
+        $throttleKey = 'add-social-link|'.Auth::id();
+
+        if (RateLimiter::tooManyAttempts($throttleKey, 10)) {
+            throw ValidationException::withMessages([
+                'url' => __('新增次數過多，請於 :seconds 秒後再試。', ['seconds' => RateLimiter::availableIn($throttleKey)]),
+            ]);
+        }
+
+        RateLimiter::hit($throttleKey);
+
         $validated = $this->validate();
 
         Auth::user()->socialLinks()->create([

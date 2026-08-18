@@ -5,7 +5,9 @@ use App\Rules\ReservedUsername;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\Rules;
+use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
 use Livewire\Volt\Component;
 
@@ -22,6 +24,10 @@ new #[Layout('layouts.guest')] class extends Component
      */
     public function register(): void
     {
+        $this->ensureIsNotRateLimited();
+
+        RateLimiter::hit($this->throttleKey());
+
         $validated = $this->validate([
             'name' => ['required', 'string', 'max:255'],
             'username' => ['required', 'string', 'min:3', 'max:20', 'alpha_dash', 'unique:'.User::class, new ReservedUsername],
@@ -36,6 +42,30 @@ new #[Layout('layouts.guest')] class extends Component
         Auth::login($user);
 
         $this->redirect(route('dashboard', absolute: false), navigate: true);
+    }
+
+    /**
+     * Ensure the registration request is not rate limited.
+     */
+    protected function ensureIsNotRateLimited(): void
+    {
+        if (! RateLimiter::tooManyAttempts($this->throttleKey(), 5)) {
+            return;
+        }
+
+        $seconds = RateLimiter::availableIn($this->throttleKey());
+
+        throw ValidationException::withMessages([
+            'name' => __('嘗試次數過多，請於 :seconds 秒後再試。', ['seconds' => $seconds]),
+        ]);
+    }
+
+    /**
+     * Get the registration rate limiting throttle key.
+     */
+    protected function throttleKey(): string
+    {
+        return 'register|'.request()->ip();
     }
 }; ?>
 
