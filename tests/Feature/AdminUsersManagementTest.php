@@ -30,6 +30,29 @@ class AdminUsersManagementTest extends TestCase
         $this->actingAs($admin)->get('/admin')->assertOk();
     }
 
+    public function test_admin_dashboard_shows_usage_stats(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+        User::factory()->count(2)->create();
+
+        Volt::actingAs($admin)
+            ->test('admin.dashboard-stats')
+            ->assertSee('3')
+            ->assertSee(__('總使用者數'));
+    }
+
+    public function test_admin_dashboard_shows_top_viewed_profiles(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+        User::factory()->create(['name' => 'Popular Person', 'username' => 'popular', 'profile_views' => 42]);
+        User::factory()->create(['name' => 'Quiet Person', 'username' => 'quiet', 'profile_views' => 0]);
+
+        Volt::actingAs($admin)
+            ->test('admin.dashboard-stats')
+            ->assertSeeInOrder(['Popular Person', '42'])
+            ->assertDontSee('Quiet Person');
+    }
+
     public function test_admin_can_search_users(): void
     {
         $admin = User::factory()->create(['is_admin' => true]);
@@ -85,6 +108,35 @@ class AdminUsersManagementTest extends TestCase
             ->call('toggleAdmin', $admin->id);
 
         $this->assertTrue($admin->fresh()->is_admin);
+    }
+
+    public function test_admin_can_suspend_and_reactivate_another_user(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+        $target = User::factory()->create(['is_active' => true]);
+
+        Volt::actingAs($admin)
+            ->test('admin.users-manage')
+            ->call('toggleActive', $target->id);
+
+        $this->assertFalse($target->fresh()->is_active);
+
+        Volt::actingAs($admin)
+            ->test('admin.users-manage')
+            ->call('toggleActive', $target->id);
+
+        $this->assertTrue($target->fresh()->is_active);
+    }
+
+    public function test_admin_cannot_suspend_themselves(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true, 'is_active' => true]);
+
+        Volt::actingAs($admin)
+            ->test('admin.users-manage')
+            ->call('toggleActive', $admin->id);
+
+        $this->assertTrue($admin->fresh()->is_active);
     }
 
     public function test_admin_can_delete_another_users_account(): void

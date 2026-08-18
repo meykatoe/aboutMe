@@ -6,7 +6,8 @@
     </x-slot>
 
     <div class="py-12">
-        <div class="max-w-6xl mx-auto sm:px-6 lg:px-8">
+        <div class="max-w-6xl mx-auto sm:px-6 lg:px-8 space-y-6">
+            <livewire:admin.dashboard-stats />
             <livewire:admin.users-manage />
         </div>
     </div>
