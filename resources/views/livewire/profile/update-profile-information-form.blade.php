@@ -2,6 +2,8 @@
 
 use App\Models\User;
 use App\Support\AvatarProcessor;
+use App\Models\UsernameHistory;
+use App\Rules\ReservedUsername;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
@@ -16,6 +18,7 @@ new class extends Component
     use WithFileUploads;
 
     public string $name = '';
+    public string $username = '';
     public string $email = '';
     public string $bio = '';
     public $avatar = null;
@@ -26,6 +29,7 @@ new class extends Component
     public function mount(): void
     {
         $this->name = Auth::user()->name;
+        $this->username = Auth::user()->username;
         $this->email = Auth::user()->email;
         $this->bio = Auth::user()->bio ?? '';
     }
@@ -39,6 +43,11 @@ new class extends Component
 
         $validated = $this->validate([
             'name' => ['required', 'string', 'max:255'],
+            'username' => [
+                'required', 'string', 'min:3', 'max:20', 'alpha_dash',
+                Rule::unique(User::class)->ignore($user->id),
+                new ReservedUsername,
+            ],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', Rule::unique(User::class)->ignore($user->id)],
             'bio' => ['nullable', 'string', 'max:1000'],
             'avatar' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,gif', 'max:2048'],
@@ -46,6 +55,7 @@ new class extends Component
 
         $user->fill([
             'name' => $validated['name'],
+            'username' => $validated['username'],
             'email' => $validated['email'],
             'bio' => $validated['bio'],
         ]);
@@ -72,6 +82,17 @@ new class extends Component
 
             $user->avatar_path = $path;
             $this->avatar = null;
+        }
+
+        if ($user->isDirty('username')) {
+            $oldUsername = $user->getOriginal('username');
+
+            // 舊使用者名稱可能曾指向別人（已被回收），改由這次變更接手；
+            // 新使用者名稱若曾是某筆歷史紀錄，該紀錄現已失效，需一併清除。
+            UsernameHistory::where('username', $oldUsername)->delete();
+            UsernameHistory::where('username', $user->username)->delete();
+
+            $user->usernameHistories()->create(['username' => $oldUsername]);
         }
 
         $user->save();
@@ -134,6 +155,15 @@ new class extends Component
             <x-input-label for="name" :value="__('Name')" />
             <x-text-input wire:model="name" id="name" name="name" type="text" class="mt-1 block w-full" required autofocus autocomplete="name" />
             <x-input-error class="mt-2" :messages="$errors->get('name')" />
+        </div>
+
+        <div>
+            <x-input-label for="username" :value="__('Username')" />
+            <x-text-input wire:model="username" id="username" name="username" type="text" class="mt-1 block w-full" required autocomplete="username" />
+            <x-input-error class="mt-2" :messages="$errors->get('username')" />
+            <p class="mt-1 text-sm text-gray-500">
+                {{ __('Your public page URL:') }} {{ url('/'.$username) }}
+            </p>
         </div>
 
         <div>

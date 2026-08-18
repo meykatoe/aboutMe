@@ -51,4 +51,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(SocialLink::class)->orderBy('position');
     }
+
+    public function usernameHistories(): HasMany
+    {
+        return $this->hasMany(UsernameHistory::class);
+    }
 }
