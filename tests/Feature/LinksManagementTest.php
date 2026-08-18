@@ -64,6 +64,29 @@ class LinksManagementTest extends TestCase
         $this->assertDatabaseMissing('links', ['title' => 'FTP Link']);
     }
 
+    public function test_adding_links_is_rate_limited(): void
+    {
+        $user = User::factory()->create();
+        $component = Volt::actingAs($user)->test('links.manage');
+
+        for ($i = 0; $i < 10; $i++) {
+            $component
+                ->set('title', "Link {$i}")
+                ->set('url', 'https://example.com')
+                ->call('addLink');
+        }
+
+        $this->assertSame(10, $user->links()->count());
+
+        $component
+            ->set('title', 'One Too Many')
+            ->set('url', 'https://example.com')
+            ->call('addLink')
+            ->assertHasErrors(['title']);
+
+        $this->assertSame(10, $user->links()->count());
+    }
+
     public function test_user_can_update_their_own_link(): void
     {
         $user = User::factory()->create();
