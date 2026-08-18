@@ -1,10 +1,13 @@
 <?php
 
 use App\Models\User;
+use App\Support\AvatarProcessor;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Livewire\Volt\Component;
 use Livewire\WithFileUploads;
 
@@ -38,7 +41,7 @@ new class extends Component
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', Rule::unique(User::class)->ignore($user->id)],
             'bio' => ['nullable', 'string', 'max:1000'],
-            'avatar' => ['nullable', 'image', 'max:2048'],
+            'avatar' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,gif', 'max:2048'],
         ]);
 
         $user->fill([
@@ -52,11 +55,22 @@ new class extends Component
         }
 
         if ($this->avatar) {
+            try {
+                $contents = AvatarProcessor::process($this->avatar);
+            } catch (\RuntimeException) {
+                throw ValidationException::withMessages([
+                    'avatar' => __('無法讀取這個圖片檔案，請換一張再試。'),
+                ]);
+            }
+
             if ($user->avatar_path) {
                 Storage::disk('public')->delete($user->avatar_path);
             }
 
-            $user->avatar_path = $this->avatar->store('avatars', 'public');
+            $path = 'avatars/'.Str::uuid().'.jpg';
+            Storage::disk('public')->put($path, $contents);
+
+            $user->avatar_path = $path;
             $this->avatar = null;
         }
 
