@@ -50,6 +50,20 @@ class LinksManagementTest extends TestCase
         $this->assertDatabaseMissing('links', ['title' => 'Bad Link']);
     }
 
+    public function test_url_must_use_http_or_https_scheme(): void
+    {
+        $user = User::factory()->create();
+
+        Volt::actingAs($user)
+            ->test('links.manage')
+            ->set('title', 'FTP Link')
+            ->set('url', 'ftp://example.com/file')
+            ->call('addLink')
+            ->assertHasErrors(['url']);
+
+        $this->assertDatabaseMissing('links', ['title' => 'FTP Link']);
+    }
+
     public function test_user_can_update_their_own_link(): void
     {
         $user = User::factory()->create();

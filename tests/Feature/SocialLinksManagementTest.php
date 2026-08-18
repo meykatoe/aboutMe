@@ -41,6 +41,19 @@ class SocialLinksManagementTest extends TestCase
         $this->assertDatabaseMissing('social_links', ['user_id' => $user->id]);
     }
 
+    public function test_url_must_use_http_or_https_scheme(): void
+    {
+        $user = User::factory()->create();
+
+        Volt::actingAs($user)
+            ->test('profile.manage-social-links')
+            ->set('url', 'ftp://example.com/file')
+            ->call('addSocialLink')
+            ->assertHasErrors(['url']);
+
+        $this->assertDatabaseMissing('social_links', ['user_id' => $user->id]);
+    }
+
     public function test_user_can_delete_their_own_social_link(): void
     {
         $user = User::factory()->create();

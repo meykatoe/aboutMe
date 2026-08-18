@@ -11,7 +11,7 @@ new class extends Component
     protected function rules(): array
     {
         return [
-            'url' => ['required', 'url', 'max:2048'],
+            'url' => ['required', 'url:http,https', 'max:2048'],
         ];
     }
 
