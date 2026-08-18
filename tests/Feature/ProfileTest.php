@@ -34,6 +34,7 @@ class ProfileTest extends TestCase
 
         $component = Volt::test('profile.update-profile-information-form')
             ->set('name', 'Test User')
+            ->set('username', $user->username)
             ->set('email', 'test@example.com')
             ->set('bio', 'Hello, this is my bio.')
             ->call('updateProfileInformation');
@@ -50,6 +51,88 @@ class ProfileTest extends TestCase
         $this->assertNull($user->email_verified_at);
     }
 
+    public function test_username_can_be_changed_and_old_username_redirects_to_new_one(): void
+    {
+        $user = User::factory()->create(['username' => 'old-name']);
+
+        $this->actingAs($user);
+
+        $component = Volt::test('profile.update-profile-information-form')
+            ->set('name', $user->name)
+            ->set('username', 'new-name')
+            ->set('email', $user->email)
+            ->call('updateProfileInformation');
+
+        $component->assertHasNoErrors();
+
+        $user->refresh();
+
+        $this->assertSame('new-name', $user->username);
+        $this->assertDatabaseHas('username_histories', [
+            'user_id' => $user->id,
+            'username' => 'old-name',
+        ]);
+
+        $this->get('/old-name')->assertRedirect('/new-name');
+    }
+
+    public function test_username_cannot_be_changed_to_an_already_taken_username(): void
+    {
+        User::factory()->create(['username' => 'taken']);
+        $user = User::factory()->create(['username' => 'myname']);
+
+        $this->actingAs($user);
+
+        Volt::test('profile.update-profile-information-form')
+            ->set('name', $user->name)
+            ->set('username', 'taken')
+            ->set('email', $user->email)
+            ->call('updateProfileInformation')
+            ->assertHasErrors('username');
+
+        $this->assertSame('myname', $user->fresh()->username);
+    }
+
+    public function test_username_cannot_be_changed_to_a_reserved_word(): void
+    {
+        $user = User::factory()->create(['username' => 'myname']);
+
+        $this->actingAs($user);
+
+        Volt::test('profile.update-profile-information-form')
+            ->set('name', $user->name)
+            ->set('username', 'admin')
+            ->set('email', $user->email)
+            ->call('updateProfileInformation')
+            ->assertHasErrors('username');
+
+        $this->assertSame('myname', $user->fresh()->username);
+    }
+
+    public function test_reclaiming_an_old_username_invalidates_the_stale_redirect(): void
+    {
+        $userA = User::factory()->create(['username' => 'shared-name']);
+
+        $this->actingAs($userA);
+
+        Volt::test('profile.update-profile-information-form')
+            ->set('name', $userA->name)
+            ->set('username', 'renamed-a')
+            ->set('email', $userA->email)
+            ->call('updateProfileInformation')
+            ->assertHasNoErrors();
+
+        // shared-name 現在是歷史紀錄，指向 userA
+        $this->get('/shared-name')->assertRedirect('/renamed-a');
+
+        $userB = User::factory()->create(['username' => 'shared-name']);
+
+        // 新使用者直接註冊了同名 username，歷史紀錄應已被清除，不再重導向
+        $response = $this->get('/shared-name');
+        $response->assertOk();
+        $response->assertSee('@shared-name');
+    }
+
     public function test_avatar_can_be_uploaded_and_replaces_the_previous_one(): void
     {
         Storage::fake('public');
@@ -60,6 +143,7 @@ class ProfileTest extends TestCase
 
         Volt::test('profile.update-profile-information-form')
             ->set('name', $user->name)
+            ->set('username', $user->username)
             ->set('email', $user->email)
             ->set('avatar', UploadedFile::fake()->image('avatar1.jpg'))
             ->call('updateProfileInformation')
@@ -72,6 +156,7 @@ class ProfileTest extends TestCase
 
         Volt::test('profile.update-profile-information-form')
             ->set('name', $user->name)
+            ->set('username', $user->username)
             ->set('email', $user->email)
             ->set('avatar', UploadedFile::fake()->image('avatar2.jpg'))
             ->call('updateProfileInformation')
@@ -92,6 +177,7 @@ class ProfileTest extends TestCase
 
         $component = Volt::test('profile.update-profile-information-form')
             ->set('name', 'Test User')
+            ->set('username', $user->username)
             ->set('email', $user->email)
             ->call('updateProfileInformation');
 
