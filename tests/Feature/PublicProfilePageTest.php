@@ -85,6 +85,16 @@ class PublicProfilePageTest extends TestCase
             ->assertSee('https://github.com/laravel', false);
     }
 
+    public function test_visiting_a_profile_page_increments_its_view_count(): void
+    {
+        $user = User::factory()->create(['username' => 'viewed', 'profile_views' => 0]);
+
+        $this->get('/viewed');
+        $this->get('/viewed');
+
+        $this->assertSame(2, $user->fresh()->profile_views);
+    }
+
     public function test_unknown_username_returns_404(): void
     {
         $response = $this->get('/no-such-user');

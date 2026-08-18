@@ -30,6 +30,29 @@ class AdminUsersManagementTest extends TestCase
         $this->actingAs($admin)->get('/admin')->assertOk();
     }
 
+    public function test_admin_dashboard_shows_usage_stats(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+        User::factory()->count(2)->create();
+
+        Volt::actingAs($admin)
+            ->test('admin.dashboard-stats')
+            ->assertSee('3')
+            ->assertSee(__('總使用者數'));
+    }
+
+    public function test_admin_dashboard_shows_top_viewed_profiles(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+        User::factory()->create(['name' => 'Popular Person', 'username' => 'popular', 'profile_views' => 42]);
+        User::factory()->create(['name' => 'Quiet Person', 'username' => 'quiet', 'profile_views' => 0]);
+
+        Volt::actingAs($admin)
+            ->test('admin.dashboard-stats')
+            ->assertSeeInOrder(['Popular Person', '42'])
+            ->assertDontSee('Quiet Person');
+    }
+
     public function test_admin_can_search_users(): void
     {
         $admin = User::factory()->create(['is_admin' => true]);
