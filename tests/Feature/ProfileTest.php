@@ -51,6 +51,23 @@ class ProfileTest extends TestCase
         $this->assertNull($user->email_verified_at);
     }
 
+    public function test_profile_visibility_can_be_turned_off(): void
+    {
+        $user = User::factory()->create(['is_public' => true]);
+
+        $this->actingAs($user);
+
+        Volt::test('profile.update-profile-information-form')
+            ->set('name', $user->name)
+            ->set('username', $user->username)
+            ->set('email', $user->email)
+            ->set('is_public', false)
+            ->call('updateProfileInformation')
+            ->assertHasNoErrors();
+
+        $this->assertFalse($user->fresh()->is_public);
+    }
+
     public function test_username_can_be_changed_and_old_username_redirects_to_new_one(): void
     {
         $user = User::factory()->create(['username' => 'old-name']);
