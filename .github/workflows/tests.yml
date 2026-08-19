@@ -88,4 +88,4 @@ jobs:
         if: steps.pr.outputs.number != ''
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh pr merge "${{ steps.pr.outputs.number }}" --auto --squash
+        run: gh pr merge "${{ steps.pr.outputs.number }}" --auto --merge
