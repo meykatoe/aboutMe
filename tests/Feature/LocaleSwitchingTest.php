@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\User;
+use App\Support\Locale;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -50,5 +51,13 @@ class LocaleSwitchingTest extends TestCase
         $this->withHeaders(['Accept-Language' => 'en-US,en;q=0.9'])->get('/login');
 
         $this->assertSame('en', app()->getLocale());
+    }
+
+    public function test_every_supported_locale_can_be_switched_to(): void
+    {
+        foreach (array_keys(Locale::supported()) as $code) {
+            $this->post("/locale/{$code}")->assertRedirect();
+            $this->assertSame($code, session('locale'));
+        }
     }
 }

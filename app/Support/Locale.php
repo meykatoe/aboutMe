@@ -12,6 +12,10 @@ class Locale
     protected const SUPPORTED = [
         'zh_TW' => '繁體中文',
         'en' => 'English',
+        'ja' => '日本語',
+        'zh_CN' => '简体中文',
+        'ko' => '한국어',
+        'th' => 'ไทย',
     ];
 
     public static function supported(): array
