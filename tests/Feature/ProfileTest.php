@@ -268,6 +268,24 @@ class ProfileTest extends TestCase
         $this->assertNull($user->fresh());
     }
 
+    public function test_deleting_account_removes_avatar_file(): void
+    {
+        Storage::fake('public');
+
+        $user = User::factory()->create([
+            'avatar_path' => 'avatars/existing.jpg',
+        ]);
+        Storage::disk('public')->put($user->avatar_path, 'fake-image-content');
+
+        $this->actingAs($user);
+
+        Volt::test('profile.delete-user-form')
+            ->set('password', 'password')
+            ->call('deleteUser');
+
+        Storage::disk('public')->assertMissing('avatars/existing.jpg');
+    }
+
     public function test_correct_password_must_be_provided_to_delete_account(): void
     {
         $user = User::factory()->create();
