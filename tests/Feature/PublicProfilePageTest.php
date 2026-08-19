@@ -45,7 +45,9 @@ class PublicProfilePageTest extends TestCase
             'bio' => null,
         ]);
 
-        $this->get('/nobio')->assertSee('這位使用者還沒有設定個人介紹。');
+        $this->withHeaders(['Accept-Language' => 'zh-TW,zh;q=0.9'])
+            ->get('/nobio')
+            ->assertSee('這位使用者還沒有設定個人介紹。');
     }
 
     public function test_public_profile_page_shows_avatar_image_when_set(): void
@@ -150,7 +152,8 @@ class PublicProfilePageTest extends TestCase
             'bio' => null,
         ]);
 
-        $this->get('/nobio2')
+        $this->withHeaders(['Accept-Language' => 'zh-TW,zh;q=0.9'])
+            ->get('/nobio2')
             ->assertSee('<meta property="og:description" content="Jane Doe 在 '.config('app.name').' 的個人頁面">', false);
     }
 

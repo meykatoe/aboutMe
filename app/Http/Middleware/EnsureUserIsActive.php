@@ -24,7 +24,7 @@ class EnsureUserIsActive
             $request->session()->invalidate();
             $request->session()->regenerateToken();
 
-            abort(403, '此帳號已被停權，請聯絡管理員。');
+            abort(403, __('此帳號已被停權，請聯絡管理員。'));
         }
 
         return $next($request);

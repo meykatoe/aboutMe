@@ -10,7 +10,7 @@
             $ogTitle = $user->name.' ('.'@'.$user->username.')';
             $ogDescription = $user->bio
                 ? Str::limit(trim(preg_replace('/\s+/', ' ', $user->bio)), 200)
-                : $user->name.' 在 '.config('app.name').' 的個人頁面';
+                : __(':name 在 :app 的個人頁面', ['name' => $user->name, 'app' => config('app.name')]);
         @endphp
 
         <meta property="og:type" content="profile">
@@ -50,7 +50,7 @@
             @if ($user->bio)
                 <p class="mt-4 text-gray-700 text-center max-w-md whitespace-pre-line">{{ $user->bio }}</p>
             @else
-                <p class="mt-4 text-gray-400 text-sm">這位使用者還沒有設定個人介紹。</p>
+                <p class="mt-4 text-gray-400 text-sm">{{ __('這位使用者還沒有設定個人介紹。') }}</p>
             @endif
 
             @if ($user->socialLinks->isNotEmpty())
