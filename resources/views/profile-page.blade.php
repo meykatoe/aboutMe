@@ -6,6 +6,29 @@
 
         <title>{{ $user->name }} ({{ '@'.$user->username }}) - {{ config('app.name') }}</title>
 
+        @php
+            $ogTitle = $user->name.' ('.'@'.$user->username.')';
+            $ogDescription = $user->bio
+                ? Str::limit(trim(preg_replace('/\s+/', ' ', $user->bio)), 200)
+                : $user->name.' 在 '.config('app.name').' 的個人頁面';
+        @endphp
+
+        <meta property="og:type" content="profile">
+        <meta property="og:title" content="{{ $ogTitle }}">
+        <meta property="og:description" content="{{ $ogDescription }}">
+        <meta property="og:url" content="{{ route('profile.show', ['username' => $user->username]) }}">
+        <meta property="og:site_name" content="{{ config('app.name') }}">
+        @if ($user->avatar_url)
+            <meta property="og:image" content="{{ $user->avatar_url }}">
+        @endif
+
+        <meta name="twitter:card" content="summary">
+        <meta name="twitter:title" content="{{ $ogTitle }}">
+        <meta name="twitter:description" content="{{ $ogDescription }}">
+        @if ($user->avatar_url)
+            <meta name="twitter:image" content="{{ $user->avatar_url }}">
+        @endif
+
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
 

@@ -88,4 +88,14 @@ jobs:
         if: steps.pr.outputs.number != ''
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh pr merge "${{ steps.pr.outputs.number }}" --auto --merge
+        run: |
+          number="${{ steps.pr.outputs.number }}"
+          for i in $(seq 1 10); do
+            if gh pr merge "$number" --auto --merge; then
+              exit 0
+            fi
+            echo "PR 合併狀態尚未計算完成，5 秒後重試（$i/10）"
+            sleep 5
+          done
+          echo "啟用 auto-merge 失敗，已重試 10 次"
+          exit 1
