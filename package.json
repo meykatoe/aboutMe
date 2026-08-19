@@ -20,6 +20,7 @@
         "@laravel/multiplex": "^0.4.1"
     },
     "dependencies": {
-        "altcha": "^2.3.0"
+        "altcha": "^2.3.0",
+        "qrcode": "^1.5.4"
     }
 }
