@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ProfilePageController;
+use App\Support\Locale;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -26,6 +27,18 @@ Route::view('links', 'links')
 Route::view('admin', 'admin.dashboard')
     ->middleware(['auth', 'verified', 'admin'])
     ->name('admin.dashboard');
+
+Route::post('/locale/{locale}', function (string $locale) {
+    abort_unless(Locale::isSupported($locale), 404);
+
+    session(['locale' => $locale]);
+
+    if (auth()->check()) {
+        auth()->user()->update(['locale' => $locale]);
+    }
+
+    return back();
+})->name('locale.update');
 
 require __DIR__.'/auth.php';
 
