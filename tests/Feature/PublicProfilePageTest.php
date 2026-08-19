@@ -125,6 +125,61 @@ class PublicProfilePageTest extends TestCase
             ->assertNotFound();
     }
 
+    public function test_public_profile_page_includes_open_graph_meta_tags(): void
+    {
+        User::factory()->create([
+            'name' => 'Jane Doe',
+            'username' => 'janedoe',
+            'bio' => '這是我的自我介紹。',
+        ]);
+
+        $response = $this->get('/janedoe');
+
+        $response
+            ->assertSee('<meta property="og:title" content="Jane Doe (@janedoe)">', false)
+            ->assertSee('<meta property="og:description" content="這是我的自我介紹。">', false)
+            ->assertSee('<meta property="og:url" content="'.route('profile.show', ['username' => 'janedoe']).'">', false)
+            ->assertSee('<meta name="twitter:title" content="Jane Doe (@janedoe)">', false);
+    }
+
+    public function test_public_profile_page_uses_fallback_description_when_bio_is_empty(): void
+    {
+        User::factory()->create([
+            'name' => 'Jane Doe',
+            'username' => 'nobio2',
+            'bio' => null,
+        ]);
+
+        $this->get('/nobio2')
+            ->assertSee('<meta property="og:description" content="Jane Doe 在 '.config('app.name').' 的個人頁面">', false);
+    }
+
+    public function test_public_profile_page_includes_og_image_when_avatar_is_set(): void
+    {
+        Storage::fake('public');
+
+        $user = User::factory()->create([
+            'username' => 'avatarog',
+            'avatar_path' => 'avatars/example.jpg',
+        ]);
+
+        $this->get('/avatarog')
+            ->assertSee('<meta property="og:image" content="'.$user->avatar_url.'">', false)
+            ->assertSee('<meta name="twitter:image" content="'.$user->avatar_url.'">', false);
+    }
+
+    public function test_public_profile_page_omits_og_image_when_avatar_is_not_set(): void
+    {
+        $user = User::factory()->create([
+            'username' => 'noavatarog',
+            'avatar_path' => null,
+        ]);
+
+        $this->get('/noavatarog')
+            ->assertDontSee('property="og:image"', false)
+            ->assertDontSee('name="twitter:image"', false);
+    }
+
     public function test_owner_can_view_own_private_profile_while_logged_in(): void
     {
         $owner = User::factory()->create([
