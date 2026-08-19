@@ -12,7 +12,7 @@ class ExampleTest extends TestCase
 
     public function test_guest_sees_the_welcome_page(): void
     {
-        $response = $this->get('/');
+        $response = $this->withHeaders(['Accept-Language' => 'zh-TW,zh;q=0.9'])->get('/');
 
         $response->assertStatus(200)->assertSee('免費建立我的主頁');
     }

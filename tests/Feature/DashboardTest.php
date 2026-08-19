@@ -30,4 +30,16 @@ class DashboardTest extends TestCase
 
         $response->assertRedirect('/login');
     }
+
+    public function test_dashboard_share_section_is_translated_for_the_users_locale(): void
+    {
+        $user = User::factory()->create(['locale' => 'en']);
+
+        $response = $this->actingAs($user)->get('/dashboard');
+
+        $response
+            ->assertOk()
+            ->assertSee('Share Your Profile Page')
+            ->assertDontSee('分享你的個人頁面');
+    }
 }

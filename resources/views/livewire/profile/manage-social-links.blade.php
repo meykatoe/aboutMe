@@ -73,7 +73,7 @@ new class extends Component
         </div>
 
         @if ($count >= 8)
-            <x-primary-button type="submit" wire:confirm="你已經有 {{ $count }} 個社群連結了，太多可能會讓版面不好看，確定要繼續新增嗎？">
+            <x-primary-button type="submit" wire:confirm="{{ __('你已經有 :count 個社群連結了，太多可能會讓版面不好看，確定要繼續新增嗎？', ['count' => $count]) }}">
                 {{ __('新增') }}
             </x-primary-button>
         @else
