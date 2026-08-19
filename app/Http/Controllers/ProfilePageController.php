@@ -13,10 +13,9 @@ class ProfilePageController extends Controller
     {
         $user = User::where('username', $username)->with(['links', 'socialLinks'])->first();
 
-        $user->increment('profile_views');
-
-        return view('profile-page', ['user' => $user]);
         if ($user) {
+            $user->increment('profile_views');
+
             return view('profile-page', ['user' => $user]);
         }
 
