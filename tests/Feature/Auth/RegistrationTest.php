@@ -27,7 +27,8 @@ class RegistrationTest extends TestCase
             ->set('username', 'testuser')
             ->set('email', 'test@example.com')
             ->set('password', 'password')
-            ->set('password_confirmation', 'password');
+            ->set('password_confirmation', 'password')
+            ->set('token', config('altcha.testing_bypass'));
 
         $component->call('register');
 
@@ -88,6 +89,7 @@ class RegistrationTest extends TestCase
                 ->set('email', "throttle{$i}@example.com")
                 ->set('password', 'password')
                 ->set('password_confirmation', 'password')
+                ->set('token', config('altcha.testing_bypass'))
                 ->call('register');
 
             \Illuminate\Support\Facades\Auth::logout();
@@ -106,5 +108,22 @@ class RegistrationTest extends TestCase
 
         $component->assertHasErrors(['name']);
         $this->assertSame(5, \App\Models\User::count());
+    }
+
+    public function test_registration_requires_a_valid_captcha_token(): void
+    {
+        $component = Volt::test('pages.auth.register')
+            ->set('name', 'Test User')
+            ->set('username', 'captchafail')
+            ->set('email', 'captchafail@example.com')
+            ->set('password', 'password')
+            ->set('password_confirmation', 'password')
+            ->set('token', 'not-a-valid-token');
+
+        $component->call('register');
+
+        $component->assertHasErrors(['token']);
+        $this->assertGuest();
+        $this->assertDatabaseMissing('users', ['username' => 'captchafail']);
     }
 }
