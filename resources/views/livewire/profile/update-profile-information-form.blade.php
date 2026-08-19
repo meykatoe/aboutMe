@@ -21,6 +21,7 @@ new class extends Component
     public string $username = '';
     public string $email = '';
     public string $bio = '';
+    public bool $is_public = true;
     public $avatar = null;
 
     /**
@@ -32,6 +33,7 @@ new class extends Component
         $this->username = Auth::user()->username;
         $this->email = Auth::user()->email;
         $this->bio = Auth::user()->bio ?? '';
+        $this->is_public = Auth::user()->is_public;
     }
 
     /**
@@ -51,6 +53,7 @@ new class extends Component
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', Rule::unique(User::class)->ignore($user->id)],
             'bio' => ['nullable', 'string', 'max:1000'],
             'avatar' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,gif', 'max:2048'],
+            'is_public' => ['required', 'boolean'],
         ]);
 
         $user->fill([
@@ -59,6 +62,8 @@ new class extends Component
             'email' => $validated['email'],
             'bio' => $validated['bio'],
         ]);
+
+        $user->is_public = $validated['is_public'];
 
         if ($user->isDirty('email')) {
             $user->email_verified_at = null;
@@ -195,6 +200,15 @@ new class extends Component
             <textarea wire:model="bio" id="bio" name="bio" rows="4" class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" maxlength="1000"></textarea>
             <x-input-error class="mt-2" :messages="$errors->get('bio')" />
         </div>
+
+        <div class="flex items-center gap-2">
+            <input wire:model="is_public" id="is_public" name="is_public" type="checkbox" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
+            <x-input-label for="is_public" :value="__('Make my page public')" />
+            <x-input-error class="mt-2" :messages="$errors->get('is_public')" />
+        </div>
+        <p class="text-sm text-gray-500">
+            {{ __('When turned off, only you can view your page while logged in — everyone else will see a 404.') }}
+        </p>
 
         <div class="flex items-center gap-4">
             <x-primary-button>{{ __('Save') }}</x-primary-button>

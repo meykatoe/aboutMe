@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use App\Models\UsernameHistory;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
 class ProfilePageController extends Controller
@@ -14,6 +15,8 @@ class ProfilePageController extends Controller
         $user = User::where('username', $username)->with(['links', 'socialLinks'])->first();
 
         if ($user) {
+            abort_if(! $user->is_public && Auth::id() !== $user->id, 404);
+
             $user->increment('profile_views');
 
             return view('profile-page', ['user' => $user]);
