@@ -101,4 +101,39 @@ class PublicProfilePageTest extends TestCase
 
         $response->assertNotFound();
     }
+
+    public function test_guest_gets_404_for_private_profile(): void
+    {
+        User::factory()->create([
+            'username' => 'privateuser',
+            'is_public' => false,
+        ]);
+
+        $this->get('/privateuser')->assertNotFound();
+    }
+
+    public function test_other_logged_in_user_gets_404_for_private_profile(): void
+    {
+        User::factory()->create([
+            'username' => 'privateuser',
+            'is_public' => false,
+        ]);
+        $other = User::factory()->create();
+
+        $this->actingAs($other)
+            ->get('/privateuser')
+            ->assertNotFound();
+    }
+
+    public function test_owner_can_view_own_private_profile_while_logged_in(): void
+    {
+        $owner = User::factory()->create([
+            'username' => 'privateuser',
+            'is_public' => false,
+        ]);
+
+        $this->actingAs($owner)
+            ->get('/privateuser')
+            ->assertOk();
+    }
 }
