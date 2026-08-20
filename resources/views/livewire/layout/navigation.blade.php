@@ -23,8 +23,11 @@ new class extends Component
             <div class="flex">
                 <!-- Logo -->
                 <div class="shrink-0 flex items-center">
-                    <a href="{{ route('dashboard') }}" wire:navigate>
-                        <x-application-logo class="block h-9 w-auto fill-current text-gray-800" />
+                    <a href="{{ route('dashboard') }}" class="flex items-center gap-2 text-gray-800" wire:navigate>
+                        <span class="flex size-8 items-center justify-center rounded-lg bg-gray-900 text-white">
+                            <x-application-logo class="w-4 h-4 fill-current" />
+                        </span>
+                        <span class="text-lg font-semibold tracking-tight">{{ config('app.name', 'aboutMe') }}</span>
                     </a>
                 </div>
 
