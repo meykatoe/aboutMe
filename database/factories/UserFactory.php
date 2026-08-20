@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\User;
+use App\Support\TwoFactorAuthenticationProvider;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -43,6 +44,30 @@ class UserFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'email_verified_at' => null,
+        ]);
+    }
+
+    /**
+     * Indicate that the user is an administrator.
+     */
+    public function admin(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'is_admin' => true,
+        ]);
+    }
+
+    /**
+     * Indicate that the user has confirmed two-factor authentication.
+     */
+    public function withTwoFactorEnabled(): static
+    {
+        $provider = app(TwoFactorAuthenticationProvider::class);
+
+        return $this->state(fn (array $attributes) => [
+            'two_factor_secret' => $provider->generateSecretKey(),
+            'two_factor_recovery_codes' => $provider->generateRecoveryCodes(),
+            'two_factor_confirmed_at' => now(),
         ]);
     }
 }

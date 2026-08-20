@@ -4,7 +4,7 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        <title>{{ config('app.name', 'AboutMe') }} — {{ __('打造你的個人主頁') }}</title>
+        <title>{{ config('app.name', 'aboutMe') }} — {{ __('打造你的個人主頁') }}</title>
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
@@ -25,8 +25,10 @@
                 <div class="relative w-full max-w-3xl mx-auto px-6 lg:max-w-7xl lg:px-10">
                     <header class="flex items-center justify-between py-10">
                         <a href="/" class="flex items-center gap-3 text-lg font-semibold text-black dark:text-white">
-                            <span class="flex size-10 items-center justify-center rounded-full border border-black/20 bg-white/70 text-black shadow-sm backdrop-blur-md dark:border-white/20 dark:bg-white/10 dark:text-white">A</span>
-                            {{ config('app.name', 'AboutMe') }}
+                            <span class="flex size-10 items-center justify-center rounded-2xl bg-black text-white shadow-sm dark:bg-white dark:text-black">
+                                <x-application-logo class="w-5 h-5 fill-current" />
+                            </span>
+                            {{ config('app.name', 'aboutMe') }}
                         </a>
 
                         <livewire:welcome.navigation />
@@ -40,7 +42,7 @@
                                 </h1>
 
                                 <p class="mt-8 max-w-md text-base leading-relaxed text-black/60 dark:text-white/60">
-                                    {{ __(':app 是開源、可自架的個人主頁產生器。免費註冊，幾分鐘內就能擁有一個專屬網址，集中展示你的簡介、頭像與所有社群連結。', ['app' => config('app.name', 'AboutMe')]) }}
+                                    {{ __(':app 是開源、可自架的個人主頁產生器。免費註冊，幾分鐘內就能擁有一個專屬網址，集中展示你的簡介、頭像與所有社群連結。', ['app' => config('app.name', 'aboutMe')]) }}
                                 </p>
 
                                 <div class="mt-10 flex flex-wrap items-center gap-4">
@@ -106,7 +108,7 @@
                     </main>
 
                     <footer class="border-t border-black/10 py-10 text-center text-sm text-black/50 dark:border-white/10 dark:text-white/50">
-                        {{ config('app.name', 'AboutMe') }} &middot; {{ __('開源個人主頁產生器') }}
+                        {{ config('app.name', 'aboutMe') }} &middot; {{ __('開源個人主頁產生器') }}
                     </footer>
                 </div>
             </div>

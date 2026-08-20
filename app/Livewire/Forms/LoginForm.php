@@ -24,9 +24,11 @@ class LoginForm extends Form
     /**
      * Attempt to authenticate the request's credentials.
      *
+     * @return bool Whether a two-factor authentication challenge is required.
+     *
      * @throws ValidationException
      */
-    public function authenticate(): void
+    public function authenticate(): bool
     {
         $this->ensureIsNotRateLimited();
 
@@ -38,7 +40,9 @@ class LoginForm extends Form
             ]);
         }
 
-        if (! Auth::user()->is_active) {
+        $user = Auth::user();
+
+        if (! $user->is_active) {
             Auth::logout();
 
             throw ValidationException::withMessages([
@@ -47,6 +51,17 @@ class LoginForm extends Form
         }
 
         RateLimiter::clear($this->throttleKey());
+
+        if ($user->hasEnabledTwoFactorAuthentication()) {
+            Auth::logout();
+
+            session()->put('login.id', encrypt($user->getKey()));
+            session()->put('login.remember', $this->remember);
+
+            return true;
+        }
+
+        return false;
     }
 
     /**

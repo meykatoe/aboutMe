@@ -25,7 +25,7 @@ class AdminUsersManagementTest extends TestCase
 
     public function test_admin_can_access_admin_dashboard(): void
     {
-        $admin = User::factory()->create(['is_admin' => true, 'email_verified_at' => now()]);
+        $admin = User::factory()->withTwoFactorEnabled()->create(['is_admin' => true, 'email_verified_at' => now()]);
 
         $this->actingAs($admin)->get('/admin')->assertOk();
     }
