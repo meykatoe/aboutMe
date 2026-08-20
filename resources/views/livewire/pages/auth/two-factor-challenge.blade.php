@@ -72,7 +72,7 @@ new #[Layout('layouts.guest')] class extends Component
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
-                'code' => __('驗證碼不正確。'),
+                'code' => __('The code is invalid.'),
             ]);
         }
     }
@@ -89,7 +89,7 @@ new #[Layout('layouts.guest')] class extends Component
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
-                'recovery_code' => __('備用碼不正確。'),
+                'recovery_code' => __('The recovery code is invalid.'),
             ]);
         }
 
@@ -111,7 +111,7 @@ new #[Layout('layouts.guest')] class extends Component
             session()->forget(['login.id', 'login.remember']);
 
             throw ValidationException::withMessages([
-                'code' => __('驗證階段已逾期，請重新登入。'),
+                'code' => __('Your authentication session has expired. Please log in again.'),
             ]);
         }
 
@@ -148,22 +148,22 @@ new #[Layout('layouts.guest')] class extends Component
 <div>
     <div class="mb-4 text-sm text-gray-600">
         @if ($useRecoveryCode)
-            {{ __('請輸入其中一組備用碼以完成登入。') }}
+            {{ __('Please enter one of your recovery codes to finish signing in.') }}
         @else
-            {{ __('請開啟驗證器 App，輸入目前顯示的 6 位數驗證碼。') }}
+            {{ __('Open your authenticator app and enter the 6-digit code currently displayed.') }}
         @endif
     </div>
 
     <form wire:submit="authenticate">
         @if ($useRecoveryCode)
             <div>
-                <x-input-label for="recovery_code" :value="__('備用碼')" />
+                <x-input-label for="recovery_code" :value="__('Recovery Code')" />
                 <x-text-input wire:model="recovery_code" id="recovery_code" class="block mt-1 w-full" type="text" name="recovery_code" autofocus autocomplete="one-time-code" />
                 <x-input-error :messages="$errors->get('recovery_code')" class="mt-2" />
             </div>
         @else
             <div>
-                <x-input-label for="code" :value="__('驗證碼')" />
+                <x-input-label for="code" :value="__('Verification Code')" />
                 <x-text-input wire:model="code" id="code" class="block mt-1 w-full" type="text" inputmode="numeric" name="code" autofocus autocomplete="one-time-code" />
                 <x-input-error :messages="$errors->get('code')" class="mt-2" />
             </div>
@@ -172,9 +172,9 @@ new #[Layout('layouts.guest')] class extends Component
         <div class="flex items-center justify-between mt-4">
             <button type="button" wire:click="toggleRecoveryCode" class="underline text-sm text-gray-600 hover:text-gray-900">
                 @if ($useRecoveryCode)
-                    {{ __('改用驗證碼登入') }}
+                    {{ __('Use an authentication code instead') }}
                 @else
-                    {{ __('改用備用碼登入') }}
+                    {{ __('Use a recovery code instead') }}
                 @endif
             </button>
 
