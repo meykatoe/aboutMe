@@ -13,7 +13,7 @@ Route::get('/', function () {
 })->name('home');
 
 Route::view('dashboard', 'dashboard')
-    ->middleware(['auth', 'verified'])
+    ->middleware(['auth', 'verified', 'require-2fa'])
     ->name('dashboard');
 
 Route::view('profile', 'profile')
@@ -21,11 +21,11 @@ Route::view('profile', 'profile')
     ->name('profile');
 
 Route::view('links', 'links')
-    ->middleware(['auth'])
+    ->middleware(['auth', 'require-2fa'])
     ->name('links.index');
 
 Route::view('admin', 'admin.dashboard')
-    ->middleware(['auth', 'verified', 'admin'])
+    ->middleware(['auth', 'verified', 'admin', 'require-2fa'])
     ->name('admin.dashboard');
 
 Route::post('/locale/{locale}', function (string $locale) {

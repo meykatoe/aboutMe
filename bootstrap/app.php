@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsureAdminHasTwoFactorEnabled;
 use App\Http\Middleware\EnsureUserIsActive;
 use App\Http\Middleware\EnsureUserIsAdmin;
 use App\Http\Middleware\SetLocale;
@@ -18,6 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'admin' => EnsureUserIsAdmin::class,
             'active' => EnsureUserIsActive::class,
+            'require-2fa' => EnsureAdminHasTwoFactorEnabled::class,
         ]);
 
         $middleware->appendToGroup('web', EnsureUserIsActive::class);
