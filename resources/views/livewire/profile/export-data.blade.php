@@ -10,18 +10,26 @@ new class extends Component
     {
         $user = Auth::user()->load(['links', 'socialLinks']);
 
-        $avatarDataUri = null;
+        $toDataUri = function (?string $path) {
+            if (! $path || ! Storage::disk('public')->exists($path)) {
+                return null;
+            }
 
-        if ($user->avatar_path && Storage::disk('public')->exists($user->avatar_path)) {
-            $mimeType = Storage::disk('public')->mimeType($user->avatar_path) ?: 'image/jpeg';
-            $contents = Storage::disk('public')->get($user->avatar_path);
+            $mimeType = Storage::disk('public')->mimeType($path) ?: 'image/jpeg';
+            $contents = Storage::disk('public')->get($path);
 
-            $avatarDataUri = 'data:'.$mimeType.';base64,'.base64_encode($contents);
-        }
+            return 'data:'.$mimeType.';base64,'.base64_encode($contents);
+        };
+
+        $avatarDataUri = $toDataUri($user->avatar_path);
+        $backgroundImagePcDataUri = $toDataUri($user->background_image_pc_path);
+        $backgroundImageMobileDataUri = $toDataUri($user->background_image_mobile_path);
 
         $html = view('exports.profile-page', [
             'user' => $user,
             'avatarDataUri' => $avatarDataUri,
+            'backgroundImagePcDataUri' => $backgroundImagePcDataUri,
+            'backgroundImageMobileDataUri' => $backgroundImageMobileDataUri,
             'exportedAt' => now(),
         ])->render();
 

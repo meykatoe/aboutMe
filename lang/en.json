@@ -89,5 +89,12 @@
     "還沒有加任何社群連結。": "No social links yet.",
     "開源個人主頁產生器": "Open-Source Personal Homepage Generator",
     "開源可自架": "Open-Source & Self-Hostable",
-    "（目前登入帳號）": "(Currently logged in)"
+    "（目前登入帳號）": "(Currently logged in)",
+    "分享頁背景": "Sharing Page Background",
+    "自訂你的分享頁背景，可以設定顏色，或分別上傳桌面版與手機版的背景圖片。有上傳背景圖時，會優先顯示圖片而非顏色。": "Customize your sharing page background — set a color, or upload separate background images for desktop and mobile. When a background image is set, it takes priority over the color.",
+    "清除顏色": "Clear Color",
+    "桌面版背景圖": "Desktop Background Image",
+    "手機版背景圖": "Mobile Background Image",
+    "尚未設定": "Not set",
+    "移除": "Remove"
 }

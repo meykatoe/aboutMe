@@ -153,5 +153,12 @@
     "Use a recovery code instead": "복구 코드로 로그인",
     "Verification Code": "인증 코드",
     "Recovery Code": "복구 코드",
-    "Your authentication session has expired. Please log in again.": "인증 세션이 만료되었습니다. 다시 로그인해 주세요."
+    "Your authentication session has expired. Please log in again.": "인증 세션이 만료되었습니다. 다시 로그인해 주세요.",
+    "分享頁背景": "공유 페이지 배경",
+    "自訂你的分享頁背景，可以設定顏色，或分別上傳桌面版與手機版的背景圖片。有上傳背景圖時，會優先顯示圖片而非顏色。": "공유 페이지 배경을 직접 꾸며보세요. 색상을 지정하거나 PC용과 모바일용 배경 이미지를 각각 업로드할 수 있습니다. 배경 이미지가 설정되어 있으면 색상보다 이미지가 우선 표시됩니다.",
+    "清除顏色": "색상 지우기",
+    "桌面版背景圖": "PC용 배경 이미지",
+    "手機版背景圖": "모바일용 배경 이미지",
+    "尚未設定": "설정되지 않음",
+    "移除": "제거"
 }

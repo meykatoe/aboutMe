@@ -231,6 +231,147 @@ class ProfileTest extends TestCase
         $this->assertNull($user->refresh()->avatar_path);
     }
 
+    public function test_background_color_can_be_saved(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user);
+
+        Volt::test('profile.update-profile-information-form')
+            ->set('name', $user->name)
+            ->set('username', $user->username)
+            ->set('email', $user->email)
+            ->set('background_color', '#112233')
+            ->call('updateProfileInformation')
+            ->assertHasNoErrors();
+
+        $this->assertSame('#112233', $user->refresh()->background_color);
+    }
+
+    public function test_invalid_background_color_is_rejected(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user);
+
+        Volt::test('profile.update-profile-information-form')
+            ->set('name', $user->name)
+            ->set('username', $user->username)
+            ->set('email', $user->email)
+            ->set('background_color', 'not-a-color')
+            ->call('updateProfileInformation')
+            ->assertHasErrors(['background_color']);
+    }
+
+    public function test_background_images_can_be_uploaded_and_replace_the_previous_ones(): void
+    {
+        Storage::fake('public');
+
+        $user = User::factory()->create();
+
+        $this->actingAs($user);
+
+        Volt::test('profile.update-profile-information-form')
+            ->set('name', $user->name)
+            ->set('username', $user->username)
+            ->set('email', $user->email)
+            ->set('backgroundImagePc', UploadedFile::fake()->image('bg-pc1.jpg'))
+            ->set('backgroundImageMobile', UploadedFile::fake()->image('bg-mobile1.jpg'))
+            ->call('updateProfileInformation')
+            ->assertHasNoErrors();
+
+        $user->refresh();
+        $firstPcPath = $user->background_image_pc_path;
+        $firstMobilePath = $user->background_image_mobile_path;
+
+        Storage::disk('public')->assertExists($firstPcPath);
+        Storage::disk('public')->assertExists($firstMobilePath);
+
+        Volt::test('profile.update-profile-information-form')
+            ->set('name', $user->name)
+            ->set('username', $user->username)
+            ->set('email', $user->email)
+            ->set('backgroundImagePc', UploadedFile::fake()->image('bg-pc2.jpg'))
+            ->set('backgroundImageMobile', UploadedFile::fake()->image('bg-mobile2.jpg'))
+            ->call('updateProfileInformation')
+            ->assertHasNoErrors();
+
+        $user->refresh();
+
+        Storage::disk('public')->assertMissing($firstPcPath);
+        Storage::disk('public')->assertMissing($firstMobilePath);
+        Storage::disk('public')->assertExists($user->background_image_pc_path);
+        Storage::disk('public')->assertExists($user->background_image_mobile_path);
+        $this->assertNotSame($firstPcPath, $user->background_image_pc_path);
+        $this->assertNotSame($firstMobilePath, $user->background_image_mobile_path);
+    }
+
+    public function test_background_image_upload_rejects_undecodable_image_data(): void
+    {
+        Storage::fake('public');
+
+        $user = User::factory()->create();
+
+        $this->actingAs($user);
+
+        $fakeImage = UploadedFile::fake()->createWithContent('bg.jpg', 'not-actually-an-image');
+
+        Volt::test('profile.update-profile-information-form')
+            ->set('name', $user->name)
+            ->set('email', $user->email)
+            ->set('backgroundImagePc', $fakeImage)
+            ->call('updateProfileInformation')
+            ->assertHasErrors(['backgroundImagePc']);
+
+        $this->assertNull($user->refresh()->background_image_pc_path);
+    }
+
+    public function test_background_image_can_be_removed(): void
+    {
+        Storage::fake('public');
+
+        $user = User::factory()->create([
+            'background_image_pc_path' => 'backgrounds/pc/existing.jpg',
+        ]);
+        Storage::disk('public')->put($user->background_image_pc_path, 'fake-image-content');
+
+        $this->actingAs($user);
+
+        Volt::test('profile.update-profile-information-form')
+            ->set('name', $user->name)
+            ->set('username', $user->username)
+            ->set('email', $user->email)
+            ->call('markBackgroundImagePcForRemoval')
+            ->call('updateProfileInformation')
+            ->assertHasNoErrors();
+
+        $user->refresh();
+
+        $this->assertNull($user->background_image_pc_path);
+        Storage::disk('public')->assertMissing('backgrounds/pc/existing.jpg');
+    }
+
+    public function test_deleting_account_removes_background_image_files(): void
+    {
+        Storage::fake('public');
+
+        $user = User::factory()->create([
+            'background_image_pc_path' => 'backgrounds/pc/existing.jpg',
+            'background_image_mobile_path' => 'backgrounds/mobile/existing.jpg',
+        ]);
+        Storage::disk('public')->put($user->background_image_pc_path, 'fake-image-content');
+        Storage::disk('public')->put($user->background_image_mobile_path, 'fake-image-content');
+
+        $this->actingAs($user);
+
+        Volt::test('profile.delete-user-form')
+            ->set('password', 'password')
+            ->call('deleteUser');
+
+        Storage::disk('public')->assertMissing('backgrounds/pc/existing.jpg');
+        Storage::disk('public')->assertMissing('backgrounds/mobile/existing.jpg');
+    }
+
     public function test_email_verification_status_is_unchanged_when_the_email_address_is_unchanged(): void
     {
         $user = User::factory()->create();

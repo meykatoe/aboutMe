@@ -153,5 +153,12 @@
     "Use a recovery code instead": "改用备用码登录",
     "Verification Code": "验证码",
     "Recovery Code": "备用码",
-    "Your authentication session has expired. Please log in again.": "验证阶段已过期，请重新登录。"
+    "Your authentication session has expired. Please log in again.": "验证阶段已过期，请重新登录。",
+    "分享頁背景": "分享页背景",
+    "自訂你的分享頁背景，可以設定顏色，或分別上傳桌面版與手機版的背景圖片。有上傳背景圖時，會優先顯示圖片而非顏色。": "自定义你的分享页背景，可以设定颜色，或分别上传桌面版与手机版的背景图片。有上传背景图时，会优先显示图片而非颜色。",
+    "清除顏色": "清除颜色",
+    "桌面版背景圖": "桌面版背景图",
+    "手機版背景圖": "手机版背景图",
+    "尚未設定": "尚未设置",
+    "移除": "移除"
 }

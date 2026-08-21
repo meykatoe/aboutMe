@@ -33,9 +33,34 @@
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+        @if ($user->background_image_pc_url || $user->background_image_mobile_url)
+            <style>
+                .profile-background {
+                    background-size: cover;
+                    background-position: center;
+                    background-repeat: no-repeat;
+                    @if ($user->background_color) background-color: {{ $user->background_color }}; @endif
+                    @if ($user->background_image_mobile_url ?? $user->background_image_pc_url)
+                        background-image: url('{{ $user->background_image_mobile_url ?? $user->background_image_pc_url }}');
+                    @endif
+                }
+                @media (min-width: 768px) {
+                    .profile-background {
+                        @if ($user->background_image_pc_url ?? $user->background_image_mobile_url)
+                            background-image: url('{{ $user->background_image_pc_url ?? $user->background_image_mobile_url }}');
+                        @endif
+                    }
+                }
+            </style>
+        @endif
     </head>
     <body class="font-sans text-gray-900 antialiased">
-        <div class="min-h-screen flex flex-col items-center pt-16 px-6 bg-gray-100">
+        <div class="profile-background min-h-screen flex flex-col items-center pt-16 px-6 {{ ($user->background_image_pc_url || $user->background_image_mobile_url) ? '' : ($user->background_color ? '' : 'bg-gray-100') }}"
+             @if (! $user->background_image_pc_url && ! $user->background_image_mobile_url && $user->background_color)
+                 style="background-color: {{ $user->background_color }};"
+             @endif
+        >
             @if ($user->avatar_url)
                 <img src="{{ $user->avatar_url }}" class="w-24 h-24 rounded-full object-cover">
             @else

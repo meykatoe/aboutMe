@@ -51,6 +51,20 @@ class User extends Authenticatable
         );
     }
 
+    protected function backgroundImagePcUrl(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => $this->background_image_pc_path ? Storage::disk('public')->url($this->background_image_pc_path) : null,
+        );
+    }
+
+    protected function backgroundImageMobileUrl(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => $this->background_image_mobile_path ? Storage::disk('public')->url($this->background_image_mobile_path) : null,
+        );
+    }
+
     public function links(): HasMany
     {
         return $this->hasMany(Link::class)->orderBy('position');

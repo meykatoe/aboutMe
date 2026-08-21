@@ -93,6 +93,22 @@
                 color: #9ca3af;
                 text-align: center;
             }
+            @if ($backgroundImagePcDataUri || $backgroundImageMobileDataUri)
+                .page {
+                    background-size: cover;
+                    background-position: center;
+                    background-repeat: no-repeat;
+                    @if ($user->background_color) background-color: {{ $user->background_color }}; @endif
+                    background-image: url('{{ $backgroundImageMobileDataUri ?? $backgroundImagePcDataUri }}');
+                }
+                @media (min-width: 768px) {
+                    .page {
+                        background-image: url('{{ $backgroundImagePcDataUri ?? $backgroundImageMobileDataUri }}');
+                    }
+                }
+            @elseif ($user->background_color)
+                .page { background-color: {{ $user->background_color }}; }
+            @endif
         </style>
     </head>
     <body>
