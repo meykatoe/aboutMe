@@ -2,6 +2,7 @@
 
 use App\Models\User;
 use App\Support\AvatarProcessor;
+use App\Support\BackgroundImageProcessor;
 use App\Models\UsernameHistory;
 use App\Rules\ReservedUsername;
 use Illuminate\Support\Facades\Auth;
@@ -23,6 +24,15 @@ new class extends Component
     public string $bio = '';
     public bool $is_public = true;
     public $avatar = null;
+    public ?string $background_color = null;
+    public $backgroundImagePc = null;
+    public $backgroundImageMobile = null;
+    public bool $removeBackgroundImagePc = false;
+    public bool $removeBackgroundImageMobile = false;
+
+    protected const MAX_BACKGROUND_IMAGE_DIMENSION_PC = 1920;
+
+    protected const MAX_BACKGROUND_IMAGE_DIMENSION_MOBILE = 1024;
 
     /**
      * Mount the component.
@@ -34,6 +44,25 @@ new class extends Component
         $this->email = Auth::user()->email;
         $this->bio = Auth::user()->bio ?? '';
         $this->is_public = Auth::user()->is_public;
+        $this->background_color = Auth::user()->background_color;
+    }
+
+    /**
+     * Mark the PC background image for removal on the next save.
+     */
+    public function markBackgroundImagePcForRemoval(): void
+    {
+        $this->removeBackgroundImagePc = true;
+        $this->backgroundImagePc = null;
+    }
+
+    /**
+     * Mark the mobile background image for removal on the next save.
+     */
+    public function markBackgroundImageMobileForRemoval(): void
+    {
+        $this->removeBackgroundImageMobile = true;
+        $this->backgroundImageMobile = null;
     }
 
     /**
@@ -54,6 +83,9 @@ new class extends Component
             'bio' => ['nullable', 'string', 'max:1000'],
             'avatar' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,gif', 'max:2048'],
             'is_public' => ['required', 'boolean'],
+            'background_color' => ['nullable', 'string', 'regex:/^#[0-9a-fA-F]{6}$/'],
+            'backgroundImagePc' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,gif', 'max:5120'],
+            'backgroundImageMobile' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,gif', 'max:5120'],
         ]);
 
         $user->fill([
@@ -64,6 +96,7 @@ new class extends Component
         ]);
 
         $user->is_public = $validated['is_public'];
+        $user->background_color = $validated['background_color'];
 
         if ($user->isDirty('email')) {
             $user->email_verified_at = null;
@@ -88,6 +121,55 @@ new class extends Component
             $user->avatar_path = $path;
             $this->avatar = null;
         }
+
+        if ($this->backgroundImagePc) {
+            try {
+                $contents = BackgroundImageProcessor::process($this->backgroundImagePc, self::MAX_BACKGROUND_IMAGE_DIMENSION_PC);
+            } catch (\RuntimeException) {
+                throw ValidationException::withMessages([
+                    'backgroundImagePc' => __('無法讀取這個圖片檔案，請換一張再試。'),
+                ]);
+            }
+
+            if ($user->background_image_pc_path) {
+                Storage::disk('public')->delete($user->background_image_pc_path);
+            }
+
+            $path = 'backgrounds/pc/'.Str::uuid().'.jpg';
+            Storage::disk('public')->put($path, $contents);
+
+            $user->background_image_pc_path = $path;
+            $this->backgroundImagePc = null;
+        } elseif ($this->removeBackgroundImagePc && $user->background_image_pc_path) {
+            Storage::disk('public')->delete($user->background_image_pc_path);
+            $user->background_image_pc_path = null;
+        }
+
+        if ($this->backgroundImageMobile) {
+            try {
+                $contents = BackgroundImageProcessor::process($this->backgroundImageMobile, self::MAX_BACKGROUND_IMAGE_DIMENSION_MOBILE);
+            } catch (\RuntimeException) {
+                throw ValidationException::withMessages([
+                    'backgroundImageMobile' => __('無法讀取這個圖片檔案，請換一張再試。'),
+                ]);
+            }
+
+            if ($user->background_image_mobile_path) {
+                Storage::disk('public')->delete($user->background_image_mobile_path);
+            }
+
+            $path = 'backgrounds/mobile/'.Str::uuid().'.jpg';
+            Storage::disk('public')->put($path, $contents);
+
+            $user->background_image_mobile_path = $path;
+            $this->backgroundImageMobile = null;
+        } elseif ($this->removeBackgroundImageMobile && $user->background_image_mobile_path) {
+            Storage::disk('public')->delete($user->background_image_mobile_path);
+            $user->background_image_mobile_path = null;
+        }
+
+        $this->removeBackgroundImagePc = false;
+        $this->removeBackgroundImageMobile = false;
 
         if ($user->isDirty('username')) {
             $oldUsername = $user->getOriginal('username');
@@ -199,6 +281,78 @@ new class extends Component
             <x-input-label for="bio" :value="__('Bio')" />
             <textarea wire:model="bio" id="bio" name="bio" rows="4" class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" maxlength="1000"></textarea>
             <x-input-error class="mt-2" :messages="$errors->get('bio')" />
+        </div>
+
+        <div>
+            <x-input-label :value="__('分享頁背景')" />
+            <p class="mt-1 text-sm text-gray-500">
+                {{ __('自訂你的分享頁背景，可以設定顏色，或分別上傳桌面版與手機版的背景圖片。有上傳背景圖時，會優先顯示圖片而非顏色。') }}
+            </p>
+
+            <div class="mt-3 flex items-center gap-3">
+                <input type="color" wire:model="background_color" id="background_color" name="background_color"
+                       class="h-10 w-14 rounded border border-gray-300 p-1">
+                <x-secondary-button type="button" wire:click="$set('background_color', null)">
+                    {{ __('清除顏色') }}
+                </x-secondary-button>
+            </div>
+            <x-input-error class="mt-2" :messages="$errors->get('background_color')" />
+
+            <div class="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2">
+                <div>
+                    <x-input-label for="backgroundImagePc" :value="__('桌面版背景圖')" />
+
+                    <div class="mt-2">
+                        @if ($backgroundImagePc)
+                            <img src="{{ $backgroundImagePc->temporaryUrl() }}" class="w-full aspect-video rounded-lg object-cover border border-gray-200">
+                        @elseif (! $removeBackgroundImagePc && auth()->user()->background_image_pc_url)
+                            <img src="{{ auth()->user()->background_image_pc_url }}" class="w-full aspect-video rounded-lg object-cover border border-gray-200">
+                        @else
+                            <div class="w-full aspect-video rounded-lg border border-dashed border-gray-300 flex items-center justify-center text-sm text-gray-400">
+                                {{ __('尚未設定') }}
+                            </div>
+                        @endif
+                    </div>
+
+                    <div class="mt-2 flex items-center gap-3">
+                        <input type="file" wire:model="backgroundImagePc" id="backgroundImagePc" accept="image/*">
+                        @if (! $backgroundImagePc && ! $removeBackgroundImagePc && auth()->user()->background_image_pc_url)
+                            <x-secondary-button type="button" wire:click="markBackgroundImagePcForRemoval">
+                                {{ __('移除') }}
+                            </x-secondary-button>
+                        @endif
+                    </div>
+
+                    <x-input-error class="mt-2" :messages="$errors->get('backgroundImagePc')" />
+                </div>
+
+                <div>
+                    <x-input-label for="backgroundImageMobile" :value="__('手機版背景圖')" />
+
+                    <div class="mt-2">
+                        @if ($backgroundImageMobile)
+                            <img src="{{ $backgroundImageMobile->temporaryUrl() }}" class="w-full aspect-[9/16] rounded-lg object-cover border border-gray-200 mx-auto max-w-[160px]">
+                        @elseif (! $removeBackgroundImageMobile && auth()->user()->background_image_mobile_url)
+                            <img src="{{ auth()->user()->background_image_mobile_url }}" class="w-full aspect-[9/16] rounded-lg object-cover border border-gray-200 mx-auto max-w-[160px]">
+                        @else
+                            <div class="w-full aspect-[9/16] rounded-lg border border-dashed border-gray-300 flex items-center justify-center text-sm text-gray-400 mx-auto max-w-[160px]">
+                                {{ __('尚未設定') }}
+                            </div>
+                        @endif
+                    </div>
+
+                    <div class="mt-2 flex items-center gap-3">
+                        <input type="file" wire:model="backgroundImageMobile" id="backgroundImageMobile" accept="image/*">
+                        @if (! $backgroundImageMobile && ! $removeBackgroundImageMobile && auth()->user()->background_image_mobile_url)
+                            <x-secondary-button type="button" wire:click="markBackgroundImageMobileForRemoval">
+                                {{ __('移除') }}
+                            </x-secondary-button>
+                        @endif
+                    </div>
+
+                    <x-input-error class="mt-2" :messages="$errors->get('backgroundImageMobile')" />
+                </div>
+            </div>
         </div>
 
         <div class="flex items-center gap-2">

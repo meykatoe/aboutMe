@@ -62,6 +62,33 @@ class PublicProfilePageTest extends TestCase
         $this->get('/hasavatar')->assertSee($user->avatar_url, false);
     }
 
+    public function test_public_profile_page_applies_custom_background_color(): void
+    {
+        User::factory()->create([
+            'username' => 'colorbg',
+            'background_color' => '#112233',
+        ]);
+
+        $this->get('/colorbg')->assertSee('#112233', false);
+    }
+
+    public function test_public_profile_page_shows_background_images_when_set(): void
+    {
+        Storage::fake('public');
+
+        $user = User::factory()->create([
+            'username' => 'imagebg',
+            'background_image_pc_path' => 'backgrounds/pc/example.jpg',
+            'background_image_mobile_path' => 'backgrounds/mobile/example.jpg',
+        ]);
+
+        $response = $this->get('/imagebg');
+
+        $response
+            ->assertSee($user->background_image_pc_url, false)
+            ->assertSee($user->background_image_mobile_url, false);
+    }
+
     public function test_public_profile_page_lists_users_links_in_order(): void
     {
         $user = User::factory()->create(['username' => 'linky']);

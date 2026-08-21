@@ -24,6 +24,14 @@ new class extends Component
             Storage::disk('public')->delete($user->avatar_path);
         }
 
+        if ($user->background_image_pc_path) {
+            Storage::disk('public')->delete($user->background_image_pc_path);
+        }
+
+        if ($user->background_image_mobile_path) {
+            Storage::disk('public')->delete($user->background_image_mobile_path);
+        }
+
         tap($user, $logout(...))->delete();
 
         $this->redirect('/', navigate: true);
